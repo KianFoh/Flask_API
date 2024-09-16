@@ -1,4 +1,4 @@
-from app import db
+from extensions import db
 from sqlalchemy import String, Text, ForeignKey, event
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
@@ -10,7 +10,7 @@ class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)  # PK
     username = db.Column(db.String(100), unique=True, nullable=False)  # Name from Google signIn
     email = db.Column(db.String(120), unique=True, nullable=False)  # email from Google signIn
-    admin = db.Column(db.Boolean, default=False)  # Admin authorization 
+    isadmin = db.Column(db.Boolean, default=False)  # Admin authorization 
 
     def __repr__(self): 
         return f'<User {self.username}>'

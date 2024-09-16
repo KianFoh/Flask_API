@@ -1,0 +1,10 @@
+{
+    "postgresql": {
+        "dbname": "Clarivate Employee Privilege",
+        "username": "Clarivate",
+        "password": "Clarivate231"
+    },
+    "google": {
+        "clientid": "223452399978-323pardairq17ovgjd075bga67je0he1.apps.googleusercontent.com"
+    }
+}

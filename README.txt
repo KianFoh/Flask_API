@@ -39,7 +39,7 @@ remove these line of code in the migration files under def upgrade():
 
     op.drop_table('spatial_ref_sys')
 
-IMPORTANT Note: Always remove these line of code during migration or it can cause error
+IMPORTANT Note: Always remove these lines of code during migration for both upgrade() and downgrade() or it can cause error
 
 # Run this command to apply the scripts
 flask db upgrade
