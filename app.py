@@ -36,7 +36,7 @@ from models import *
 @google_token_required
 def create_user(verified_email):
     # Log the API call with the verified email
-    logging.info(f"API /api/users called by: {verified_email}")
+    logging.info(f"API /users called by: {verified_email}")
 
     data = request.get_json()
     username = data.get('name')
