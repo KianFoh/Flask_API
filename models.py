@@ -27,15 +27,18 @@ class Addresses(db.Model):
     __tablename__ = 'addresses'
     id = db.Column(db.Integer, primary_key=True)  # PK
     merchant_id = db.Column(db.Integer, ForeignKey('merchants.id'), nullable=False)  # FK to Merchants
-    address = db.Column(db.String, nullable=False)  # Address
+    address = db.Column(String, nullable=False)  # Address
+
+    merchant = relationship('Merchants', backref='addresses')
+    locations = relationship('Locations', backref='address', cascade='all, delete-orphan')
 
     def __repr__(self):
         return f'<Address {self.address}>'
-
+    
 class Locations(db.Model):
     __tablename__ = 'locations'
     id = db.Column(db.Integer, primary_key=True)  # PK
-    merchant_id = db.Column(db.Integer, ForeignKey('merchants.id'), nullable=False)  # FK to Merchants
+    address_id = db.Column(db.Integer, ForeignKey('addresses.id'), nullable=False)  # FK to Addresses
     location = db.Column(Geography(geometry_type='POINT', srid=4326), nullable=False, index=False)  # Location
 
     def __repr__(self):
@@ -43,17 +46,18 @@ class Locations(db.Model):
 
 class Merchants(db.Model):
     __tablename__ = 'merchants'
+    
     id = db.Column(db.Integer, primary_key=True)  # PK
     name = db.Column(String, nullable=False)  # Merchant name
     category_id = db.Column(db.Integer, ForeignKey('categories.id'), nullable=False)  # FK to Categories
     discount = db.Column(Text, nullable=False)  # Multiline string for discount
     more_info = db.Column(Text, nullable=True)  # Multiline string for additional info
     terms = db.Column(Text, nullable=False)  # Multiline string for terms
+    testing = db.Column(Text, nullable=False)  # Multiline string for terms
     image = db.Column(String, nullable=True)  # URL to the image
 
     category = relationship('Categories', backref='merchants')
     addresses = relationship('Addresses', backref='merchant', cascade='all, delete-orphan')
-    locations = relationship('Locations', backref='merchant', cascade='all, delete-orphan')
 
     def __repr__(self):
         return f'<Merchant {self.name}>'
