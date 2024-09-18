@@ -29,7 +29,6 @@ class Addresses(db.Model):
     merchant_id = db.Column(db.Integer, ForeignKey('merchants.id'), nullable=False)  # FK to Merchants
     address = db.Column(String, nullable=False)  # Address
 
-    merchant = relationship('Merchants', backref='addresses')
     locations = relationship('Locations', backref='address', cascade='all, delete-orphan')
 
     def __repr__(self):
