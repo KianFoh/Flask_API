@@ -1,7 +1,6 @@
 from extensions import db
-from sqlalchemy import String, Text, ForeignKey, event
+from sqlalchemy import String, Text, ForeignKey
 from sqlalchemy.orm import relationship
-from sqlalchemy.orm.session import Session
 from geoalchemy2 import Geography  # For spatial data
 
 # Define models (tables)
@@ -14,6 +13,14 @@ class Users(db.Model):
 
     def __repr__(self): 
         return f'<User {self.username}>'
+
+class AdminEmails(db.Model):
+    __tablename__ = 'admin_emails'
+    id = db.Column(db.Integer, primary_key=True)  # PK
+    email = db.Column(String, unique=True, nullable=False)  # Admin email
+
+    def __repr__(self):
+        return f'<AdminEmail {self.email}>'
 
 class Categories(db.Model):
     __tablename__ = 'categories'
@@ -60,12 +67,3 @@ class Merchants(db.Model):
 
     def __repr__(self):
         return f'<Merchant {self.name}>'
-
-# Event listener to check the number of merchants in a category before deleting a merchant
-@event.listens_for(Session, 'before_flush')
-def check_and_delete_category(session, flush_context, instances):
-    for instance in session.deleted:
-        if isinstance(instance, Merchants):
-            category = instance.category
-            if len(category.merchants) == 1:
-                session.delete(category)
