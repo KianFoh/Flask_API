@@ -30,7 +30,5 @@ def handle_disconnect():
     leave_room(email)
     print(f'Client disconnected: {email}')
 
-def notify_user_update(user_id):
-    user = Users.query.get(user_id)
-    if user:
-        socketio.emit('user_update', {'isadmin': user.isadmin}, room=user.email)
+def admin_status_update(user):
+    socketio.emit('admin_status_update', {'isadmin': user.isadmin}, room=user.email)    
