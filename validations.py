@@ -22,14 +22,16 @@ class Valid:
     @staticmethod
     def user_is_admin(email):
         user = Users.query.filter_by(email=email).first()
-        if user and user.isadmin:
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        if not user.isadmin:
             return jsonify({'error': 'Require admin access'}), 403
         return None
     
     @staticmethod
     def missing_email(email):
-        if email is None:
-            return jsonify({'error': 'Missing Email'}), 400
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
         return None
 
     @staticmethod
@@ -64,3 +66,7 @@ class Valid:
             return user
         return None
     
+    @staticmethod
+    def check_admin_email_exists(email):
+        admin_email = AdminEmails.query.filter_by(email=email).first()
+        return admin_email
