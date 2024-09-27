@@ -1,7 +1,6 @@
 from extensions import db
-from sqlalchemy import String, Text, ForeignKey
+from sqlalchemy import String, Text, ForeignKey, Enum
 from sqlalchemy.orm import relationship
-from geoalchemy2 import Geography  # For spatial data
 
 # Define models (tables)
 class Users(db.Model):
@@ -36,19 +35,18 @@ class Addresses(db.Model):
     merchant_id = db.Column(db.Integer, ForeignKey('merchants.id'), nullable=False)  # FK to Merchants
     address = db.Column(String, nullable=False)  # Address
 
-    locations = relationship('Locations', backref='address', cascade='all, delete-orphan')
-
     def __repr__(self):
         return f'<Address {self.address}>'
     
-class Locations(db.Model):
-    __tablename__ = 'locations'
+class RequestsMerchants(db.Model):
+    __tablename__ = 'requests_merchants'
     id = db.Column(db.Integer, primary_key=True)  # PK
-    address_id = db.Column(db.Integer, ForeignKey('addresses.id'), nullable=False)  # FK to Addresses
-    location = db.Column(Geography(geometry_type='POINT', srid=4326), nullable=False, index=False)  # Location
+    name = db.Column(String, nullable=False)  # Merchant name
+    category = db.Column(Enum('F&B', 'Lifestyle', name='category_enum'), nullable=False)  # Category with limited values
+    contact_no = db.Column(String, nullable=False)  # Contact number
 
     def __repr__(self):
-        return f'<Location {self.location}>'
+        return f'<RequestMerchant {self.name}>'
 
 class Merchants(db.Model):
     __tablename__ = 'merchants'
