@@ -144,3 +144,47 @@ def remove_admin(verified_email):
 
     return jsonify({'message': 'Admin email removed successfully'}), 200
 
+# Add merchant
+@main.route('/add_merchant', methods=['POST'])
+@google_token_required
+def add_merchant(verified_email):
+    # Log the API call with the verified email
+    logging.info(f"API /add_merchant called by: {verified_email}")
+
+    data = request.get_json()
+    image_url = data.get('image_url')
+    merchant_name = data.get('name')
+    merchant_type = data.get('type')
+    merchant_address = data.get('address')
+    discount = data.get('discount')
+    extra_info = data.get('extra_info')
+    terms_conditions = data.get('terms_conditions')
+
+    # Validate if the user is an admin
+    response = Valid.user_is_admin(verified_email)
+    if response:
+        return response
+
+    # Create a new merchant
+    new_merchant = Merchants(
+        image_url=image_url,
+        name=merchant_name,
+        type=merchant_type,
+        address=merchant_address,
+        discount=discount,
+        extra_info=extra_info,
+        terms_conditions=terms_conditions
+    )
+    db.session.add(new_merchant)
+    db.session.commit()
+
+    return jsonify({'merchant': {
+        'image_url': new_merchant.image_url,
+        'name': new_merchant.name,
+        'type': new_merchant.type,
+        'address': new_merchant.address,
+        'discount': new_merchant.discount,
+        'extra_info': new_merchant.extra_info,
+        'terms_conditions': new_merchant.terms_conditions
+    }}), 201
+
