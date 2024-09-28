@@ -44,6 +44,7 @@ class RequestsMerchants(db.Model):
     name = db.Column(String, nullable=False)  # Merchant name
     category = db.Column(Enum('F&B', 'Lifestyle', name='category_enum'), nullable=False)  # Category with limited values
     contact_no = db.Column(String, nullable=False)  # Contact number
+    requester_email = db.Column(String, nullable=False)  # Email
 
     def __repr__(self):
         return f'<RequestMerchant {self.name}>'

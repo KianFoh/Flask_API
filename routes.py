@@ -1,5 +1,4 @@
 # routes.py
-import re
 from flask import request, jsonify, Blueprint
 from flask_migrate import Migrate
 import logging
@@ -7,6 +6,9 @@ from extensions import db
 from socketio_events import admin_status_update
 from token_verify import google_token_required
 from validations import Valid
+import pandas as pd
+from flask import send_file
+from io import BytesIO
 
 # Import your models
 from models import *
@@ -78,7 +80,7 @@ def add_admin(verified_email):
     email = request.data.decode('utf-8')
 
     # Validate if the email is missing
-    response = Valid.missing_email(email)
+    response = Valid.missing_field(email, 'Email')
     if response:
         return response
 
@@ -88,7 +90,7 @@ def add_admin(verified_email):
         return response
 
     # Validate if the email already exists in the AdminEmails table
-    response = Valid.admin_email_exists(email)
+    response = Valid.missing_field(email, 'Email')
     if response:
         return response
 
@@ -117,7 +119,7 @@ def remove_admin(verified_email):
     email = request.args.get('email')
 
     # Validate if the email is missing
-    response = Valid.missing_email(email)
+    response = Valid.missing_field(email, 'Email')
     if response:
         return response
 
@@ -143,6 +145,50 @@ def remove_admin(verified_email):
         admin_status_update(user)
 
     return jsonify({'message': 'Admin email removed successfully'}), 200
+
+# Add admin email
+@main.route('/add_request_merchant', methods=['POST'])
+@google_token_required
+def add_request_merchant(verified_email):
+    # Log the API call with the verified email
+    logging.info(f"API /add_request_merchant called by: {verified_email}")
+
+    data = request.get_json()
+    name = data.get('name')
+    type = data.get('type')
+    contact = data.get('contact')
+
+    # Validate if name is missing
+    response = Valid.missing_field(name, 'Name')
+    if response:
+        return response
+
+    # Validate if type is missing
+    response = Valid.missing_field(type, 'Type of business')
+    if response:
+        return response
+    
+    # Validate if contact is missing
+    response = Valid.missing_field(contact, 'Contact')
+    if response:
+        return response
+    
+    # Validate if contact is a valid phone number
+    response = Valid.valid_phone_number(contact, 'Contact')
+    if response:
+        return response
+    
+    # Create a new merchant request
+    new_request = RequestsMerchants(
+        name=name,
+        category=type,
+        contact_no=contact, 
+        requester_email=verified_email
+    )
+    db.session.add(new_request)
+    db.session.commit()
+
+    return jsonify({'Success': 'Request Merchat added'}), 201
 
 # Add merchant
 @main.route('/add_merchant', methods=['POST'])
@@ -188,3 +234,45 @@ def add_merchant(verified_email):
         'terms_conditions': new_merchant.terms_conditions
     }}), 201
 
+# Export RequestsMerchants to Excel
+@main.route('/export_request_merchants', methods=['GET'])
+@google_token_required
+def export_request_merchants(verified_email):
+    # Query all requests merchants data
+    requests_merchants = RequestsMerchants.query.all()
+
+    # Check if data is queried correctly
+    if not requests_merchants:
+        return jsonify({'error': 'No data found'}), 404
+
+    # Convert data to a list of dictionaries
+    data = [
+        {
+            'ID': rm.id,
+            'Name': rm.name,
+            'Category': rm.category,
+            'Contact No': rm.contact_no,
+            'Requester Email': rm.requester_email
+        }
+        for rm in requests_merchants
+    ]
+
+    # Check if data is converted correctly
+    if not data:
+        return jsonify({'error': 'Data conversion failed'}), 500
+
+    # Create a DataFrame
+    df = pd.DataFrame(data)
+
+    # Check if DataFrame is created correctly
+    if df.empty:
+        return jsonify({'error': 'DataFrame is empty'}), 500
+
+    # Create an Excel file in memory
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='RequestsMerchants', header=True)
+
+    output.seek(0)
+
+    return send_file(output, download_name='requests_merchants.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')

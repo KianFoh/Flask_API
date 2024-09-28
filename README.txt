@@ -3,9 +3,6 @@ Setup
 * Step 1: Install database and setup
 
 You need to install PostgreSQL db recommed using PostgreSQL 16
-Install PostGIS 3.4 Bundle v3.4.2 from Stack Builder for storing spatial data
-
-Install postgis as extension in your postgreSQL DB
 
 replace the username, password, dbname
 
@@ -14,7 +11,25 @@ username = 'Clarivate'
 password = 'Clarivate231'
 db_name = 'Clarivate Employee Privilege'
 
-* Step 2: Setup Flask Migrate to update DB for changes in models.py
+* Step 2: install python & python dependency
+
+development python version: Python 3.12.2
+
+Recommend to setup virtualenv using:
+virtualenv==20.25.1
+
+Deploy for production using:
+
+# For Linux 
+gunicorn==23.0.0
+
+# For Window  
+waitress==3.0.0
+
+install all dependecy in requirement.txt
+pip install -r requirements.txt
+
+* Step 3: Setup Flask Migrate to update DB for changes in models.py
 
 # Run this to Initial directory for storing migration files
 flask db init

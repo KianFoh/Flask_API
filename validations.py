@@ -3,6 +3,7 @@ from flask import jsonify
 from models import Users, AdminEmails
 from extensions import db
 from utils import VALID_EMAIL_DOMAIN
+import phonenumbers
 
 class Valid:
     @staticmethod
@@ -70,3 +71,19 @@ class Valid:
     def check_admin_email_exists(email):
         admin_email = AdminEmails.query.filter_by(email=email).first()
         return admin_email
+    
+    @staticmethod
+    def missing_field(value, field):
+        if not value:
+            return jsonify({'error': f'{field} is required', 'input_field': field}), 400
+        return None
+    
+    @staticmethod
+    def valid_phone_number(phone_number, field):
+        try:
+            parsed_number = phonenumbers.parse(phone_number, None)
+            if not phonenumbers.is_valid_number(parsed_number):
+                return jsonify({'error': 'Invalid phone number', 'input_field': field}), 400
+            return None
+        except phonenumbers.NumberParseException:
+            return jsonify({'error': 'Invalid phone number format', 'input_field': field}), 400
