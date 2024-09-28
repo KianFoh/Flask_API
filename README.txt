@@ -37,27 +37,10 @@ flask db init
 # Create migration scripts
 flask db migrate -m "Initial Migration"
 
-# Add additional dependency for migration file
-add this import in ./migrations/versions/9306bc95aeab_initial_migration.py
-import geoalchemy2
-
-Note: 
-- this file 9306bc95aeab_initial_migration.py name could be a bit different
-- Scripts generated in migration files by Alembic require user to review first before applying it
-
-# Remove code to prevent creating duplicate index
-
-remove these line of code in the migration files under def upgrade():
-
-    with op.batch_alter_table('locations', schema=None) as batch_op:
-        batch_op.create_index('idx_locations_location', ['location'], unique=False, postgresql_using='gist')
-
-    op.drop_table('spatial_ref_sys')
-
-IMPORTANT Note: Always remove these lines of code during migration for both upgrade() and downgrade() or it can cause error
-
 # Run this command to apply the scripts
 flask db upgrade
+
+
 
 
 Extra notes:
