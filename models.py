@@ -42,7 +42,7 @@ class RequestsMerchants(db.Model):
     __tablename__ = 'requests_merchants'
     id = db.Column(db.Integer, primary_key=True)  # PK
     name = db.Column(String, nullable=False)  # Merchant name
-    category = db.Column(Enum('F&B', 'Lifestyle', name='category_enum'), nullable=False)  # Category with limited values
+    category = db.Column(Enum('F&B', 'LifeStyle', name='category_enum'), nullable=False)  # Category with limited values
     contact_no = db.Column(String, nullable=False)  # Contact number
     requester_email = db.Column(String, nullable=False)  # Email
 
