@@ -197,42 +197,98 @@ def add_merchant(verified_email):
     # Log the API call with the verified email
     logging.info(f"API /add_merchant called by: {verified_email}")
 
-    data = request.get_json()
-    image_url = data.get('image_url')
-    merchant_name = data.get('name')
-    merchant_type = data.get('type')
-    merchant_address = data.get('address')
-    discount = data.get('discount')
-    extra_info = data.get('extra_info')
-    terms_conditions = data.get('terms_conditions')
-
     # Validate if the user is an admin
     response = Valid.user_is_admin(verified_email)
     if response:
         return response
 
-    # Create a new merchant
+    data = request.get_json()
+    image_urls = data.get('imageURL')
+    merchant_name = data.get('name')
+    merchant_type = data.get('type')
+    merchant_address = data.get('address')
+    discount = data.get('discount')
+    extra_info = data.get('info')
+    terms_conditions = data.get('terms')
+
+    # Validate if name is missing
+    response = Valid.missing_field(merchant_name, 'Name')
+    if response:
+        return response
+    
+    #Validate if name is existing
+    response = Valid.merchant_exists(merchant_name)
+    if response:
+        return response
+    
+    # Validate if type is missing
+    response = Valid.missing_field(merchant_type, 'Type')
+    if response:
+        return response
+    
+    # Validate if address is missing
+    response = Valid.missing_field(merchant_address[0], 'Address')
+    if response:
+        return response
+    
+    # Validate if discount is missing
+    response = Valid.missing_field(discount, 'Discount')
+    if response:
+        return response
+    
+    # Validate if terms_conditions is missing
+    response = Valid.missing_field(terms_conditions, 'Terms')
+    if response:
+        return response
+    
+
+    # Capitalize the first letter of the type
+    merchant_name = merchant_name.capitalize()
+    merchant_type = merchant_type.capitalize()
+
+    # Find or create the category
+    category = Categories.query.filter_by(name=merchant_type).first()
+    if not category:
+        category = Categories(name=merchant_type)
+        db.session.add(category)
+        db.session.commit()
+
+    # Create new merchant
     new_merchant = Merchants(
-        image_url=image_url,
         name=merchant_name,
-        type=merchant_type,
-        address=merchant_address,
+        category_id=category.id,
         discount=discount,
-        extra_info=extra_info,
-        terms_conditions=terms_conditions
+        more_info=extra_info,
+        terms=terms_conditions
     )
     db.session.add(new_merchant)
     db.session.commit()
 
-    return jsonify({'merchant': {
-        'image_url': new_merchant.image_url,
-        'name': new_merchant.name,
-        'type': new_merchant.type,
-        'address': new_merchant.address,
-        'discount': new_merchant.discount,
-        'extra_info': new_merchant.extra_info,
-        'terms_conditions': new_merchant.terms_conditions
-    }}), 201
+
+
+    # Add addresses
+    for address in merchant_address:
+        if not address or address.strip() == "":
+            continue
+        new_address = Addresses(
+            merchant_id=new_merchant.id,
+            address=address
+        )
+        db.session.add(new_address)
+
+    # Add image URLs
+    for url in image_urls:
+        if not url or url.strip() == "":
+            continue
+        new_image = MerchantImages(
+            merchant_id=new_merchant.id,
+            image_url=url
+        )
+        db.session.add(new_image)
+
+    db.session.commit()
+
+    return jsonify({'Success': 'Merchant added'}), 201
 
 # Export RequestsMerchants to Excel
 @main.route('/export_request_merchants', methods=['GET'])
@@ -276,3 +332,24 @@ def export_request_merchants(verified_email):
     output.seek(0)
 
     return send_file(output, download_name='requests_merchants.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+# Get categories
+@main.route('/categories', methods=['GET'])
+@google_token_required
+def get_categories(verified_email):
+    # Log the API call with the verified email
+    logging.info(f"API /categories called by: {verified_email}")
+
+    # Query all categories
+    categories = Categories.query.all()
+
+    # Convert data to a list of dictionaries
+    data = [
+        {
+            'ID': c.id,
+            'Name': c.name
+        }
+        for c in categories
+    ]   
+
+    return jsonify({'Categories': data}), 200

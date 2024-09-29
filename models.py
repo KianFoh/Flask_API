@@ -58,11 +58,20 @@ class Merchants(db.Model):
     discount = db.Column(Text, nullable=False)  # Multiline string for discount
     more_info = db.Column(Text, nullable=True)  # Multiline string for additional info
     terms = db.Column(Text, nullable=False)  # Multiline string for terms
-    testing = db.Column(Text, nullable=False)  # Multiline string for terms
-    image = db.Column(String, nullable=True)  # URL to the image
 
     category = relationship('Categories', backref='merchants')
     addresses = relationship('Addresses', backref='merchant', cascade='all, delete-orphan')
+    images = relationship('MerchantImages', backref='merchant', cascade='all, delete-orphan')
 
     def __repr__(self):
         return f'<Merchant {self.name}>'
+
+class MerchantImages(db.Model):
+    __tablename__ = 'merchant_images'
+    
+    id = db.Column(db.Integer, primary_key=True)  # PK
+    merchant_id = db.Column(db.Integer, ForeignKey('merchants.id'), nullable=False)  # FK to Merchants
+    image_url = db.Column(String, nullable=True)  # Image URL, can be NULL
+
+    def __repr__(self):
+        return f'<MerchantImage {self.image_url}>'

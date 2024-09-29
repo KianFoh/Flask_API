@@ -1,6 +1,6 @@
 # valid.py
 from flask import jsonify
-from models import Users, AdminEmails
+from models import Users, AdminEmails, Merchants
 from extensions import db
 from utils import VALID_EMAIL_DOMAIN
 import phonenumbers
@@ -74,7 +74,7 @@ class Valid:
     
     @staticmethod
     def missing_field(value, field):
-        if not value:
+        if not value or value.strip() == "":
             return jsonify({'error': f'{field} is required', 'input_field': field}), 400
         return None
     
@@ -87,3 +87,15 @@ class Valid:
             return None
         except phonenumbers.NumberParseException:
             return jsonify({'error': 'Invalid phone number format', 'input_field': field}), 400
+    
+    @staticmethod
+    def merchant_exists(merchant_name):
+        # Query the database to check if the merchant exists
+        merchant = Merchants.query.filter_by(name=merchant_name).first()
+        
+        if merchant:
+            # If the merchant exists, return a JSON response
+            return jsonify({'error': 'Merchant already exists', 'input_field': 'Name'}), 400
+        
+        # If the merchant does not exist, return None
+        return None
