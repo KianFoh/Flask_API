@@ -4,6 +4,7 @@ from flask_migrate import Migrate
 import logging
 from extensions import db
 from socketio_events import admin_status_update
+import socketio_events
 from token_verify import google_token_required
 from validations import Valid
 import pandas as pd
@@ -252,6 +253,8 @@ def add_merchant(verified_email):
         category = Categories(name=merchant_type)
         db.session.add(category)
         db.session.commit()
+        socketio_events.category_update(category)
+        
 
     # Create new merchant
     new_merchant = Merchants(

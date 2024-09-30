@@ -32,3 +32,9 @@ def handle_disconnect():
 
 def admin_status_update(user):
     socketio.emit('admin_status_update', {'isadmin': user.isadmin}, room=user.email)    
+
+def category_update(category):
+    data = {'ID': category.id, 'Name': category.name}
+       
+
+    socketio.emit('category_update', {'Categories': data})
