@@ -212,6 +212,8 @@ def add_merchant(verified_email):
     extra_info = data.get('info')
     terms_conditions = data.get('terms')
 
+
+
     # Validate if name is missing
     response = Valid.missing_field(merchant_name, 'Name')
     if response:
@@ -356,3 +358,26 @@ def get_categories(verified_email):
     ]   
 
     return jsonify({'Categories': data}), 200
+
+# Get merchants
+@main.route('/merchants', methods=['GET'])
+@google_token_required
+def get_merchants(verified_email):
+    # Log the API call with the verified email
+    logging.info(f"API /merchants called by: {verified_email}")
+
+    # Query all merchants
+    merchants = Merchants.query.all()
+
+    # Convert data to a list of dictionaries
+    data = [
+        {
+            'ID': merchant.id,
+            'Name': merchant.name,
+            'Category': merchant.category.name, 
+            'Image': merchant.images[0].image_url if merchant.images and len(merchant.images) > 0 else None
+        }
+        for merchant in merchants
+    ]
+
+    return jsonify({'Merchants': data}), 200
