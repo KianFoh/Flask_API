@@ -3,7 +3,6 @@ from flask import request, jsonify, Blueprint
 from flask_migrate import Migrate
 import logging
 from extensions import db
-from socketio_events import admin_status_update
 import socketio_events
 from token_verify import google_token_required
 from validations import Valid
@@ -106,7 +105,7 @@ def add_admin(verified_email):
     # Update the user to be an admin
     user = Valid.update_user_to_admin(email)
     if user:
-        admin_status_update(user)
+        socketio_events.admin_status_update(user)
 
     return jsonify({'admin_email': new_admin.email}), 201
 
@@ -143,7 +142,7 @@ def remove_admin(verified_email):
     if user:
         user.isadmin = False
         db.session.commit()
-        admin_status_update(user)
+        socketio_events.admin_status_update(user)
 
     return jsonify({'message': 'Admin email removed successfully'}), 200
 
@@ -201,7 +200,7 @@ def add_merchant(verified_email):
     # Validate if the user is an admin
     response = Valid.user_is_admin(verified_email)
     if response:
-        return response
+        return jsonify({'error': 'Only administrators are authorized to add new merchants'}), 403
 
     data = request.get_json()
     image_urls = data.get('imageURL')
@@ -212,14 +211,12 @@ def add_merchant(verified_email):
     extra_info = data.get('info')
     terms_conditions = data.get('terms')
 
-
-
     # Validate if name is missing
     response = Valid.missing_field(merchant_name, 'Name')
     if response:
         return response
     
-    #Validate if name is existing
+    # Validate if name is existing
     response = Valid.merchant_exists(merchant_name)
     if response:
         return response
@@ -243,7 +240,6 @@ def add_merchant(verified_email):
     response = Valid.missing_field(terms_conditions, 'Terms')
     if response:
         return response
-    
 
     # Capitalize the first letter of the type
     merchant_name = merchant_name.capitalize()
@@ -256,7 +252,6 @@ def add_merchant(verified_email):
         db.session.add(category)
         db.session.commit()
         socketio_events.category_update(category)
-        
 
     # Create new merchant
     new_merchant = Merchants(
@@ -268,8 +263,6 @@ def add_merchant(verified_email):
     )
     db.session.add(new_merchant)
     db.session.commit()
-
-
 
     # Add addresses
     for address in merchant_address:
@@ -292,6 +285,9 @@ def add_merchant(verified_email):
         db.session.add(new_image)
 
     db.session.commit()
+
+    # Emit the new merchant data via Socket.IO
+    socketio_events.add_merchantUpdate(new_merchant)
 
     return jsonify({'Success': 'Merchant added'}), 201
 
@@ -375,7 +371,7 @@ def get_merchants(verified_email):
             'ID': merchant.id,
             'Name': merchant.name,
             'Category': merchant.category.name, 
-            'Image': merchant.images[0].image_url if merchant.images and len(merchant.images) > 0 else None
+            'Image': merchant.images[0].image_url if merchant.images and len(merchant.images) > 0 else ""
         }
         for merchant in merchants
     ]

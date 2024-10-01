@@ -35,6 +35,14 @@ def admin_status_update(user):
 
 def category_update(category):
     data = {'ID': category.id, 'Name': category.name}
-       
+    socketio.emit('category_added', {'Categories': data})
 
-    socketio.emit('category_update', {'Categories': data})
+# Function to emit merchant data via Socket.IO
+def add_merchantUpdate(merchant):
+    data = {
+        'ID': merchant.id,
+        'Name': merchant.name,
+        'Category': merchant.category.name,
+        'Image': merchant.images[0].image_url if merchant.images and len(merchant.images) > 0 else ""
+    }
+    socketio.emit('merchant_added', {'Merchants': data})
