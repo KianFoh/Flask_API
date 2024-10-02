@@ -377,3 +377,38 @@ def get_merchants(verified_email):
     ]
 
     return jsonify({'Merchants': data}), 200
+
+# Get merchant by ID
+@main.route('/merchant', methods=['GET'])
+@google_token_required
+def get_merchant(verified_email):
+    # Log the API call with the verified email
+    logging.info(f"API /merchant called by: {verified_email}")
+
+    merchant_id = request.args.get('id')
+
+    # Validate if merchant_id is missing
+    response = Valid.missing_field(merchant_id, 'ID')
+    if response:
+        return response
+
+    # Query merchant by ID
+    merchant = Merchants.query.filter_by(id=merchant_id).first()
+
+    # Check if merchant exists
+    if not merchant:
+        return jsonify({'error': 'Merchant not found'}), 404
+
+    # Convert data to a dictionary
+    data = {
+        'ID': merchant.id,
+        'Name': merchant.name,
+        'Category': merchant.category.name,
+        'Discount': merchant.discount,
+        'More Info': merchant.more_info,
+        'Terms': merchant.terms,
+        'Images': [image.image_url for image in merchant.images],
+        'Addresses': [address.address for address in merchant.addresses]
+    }
+
+    return jsonify({'Merchant': data}), 200
