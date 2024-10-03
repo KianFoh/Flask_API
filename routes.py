@@ -16,11 +16,11 @@ from models import *
 main = Blueprint('main', __name__)
 
 # Create a new user
-@main.route('/users', methods=['POST'])
+@main.route('/user', methods=['POST'])
 @google_token_required
 def create_user(verified_email):
     # Log the API call with the verified email
-    logging.info(f"API /users called by: {verified_email}")
+    logging.info(f"API /user POST called by: {verified_email}")
 
     data = request.get_json()
     username = data.get('name')
@@ -49,18 +49,19 @@ def create_user(verified_email):
         return jsonify({'error': str(e)}), 500
     
 # Get user info
-@main.route('/user_info', methods=['GET'])
+@main.route('/user', methods=['GET'])
 @google_token_required
 def user_info(verified_email):
+    
+    # Log the API call with the verified email
+    logging.info(f"API /user GET called by: {verified_email}")
+
     email = request.args.get('email')
 
     if email is None:
         return jsonify({'error': 'Email is required'}), 400
     if email != verified_email:
         return jsonify({'error': 'Unauthorized'}), 401
-    
-    # Log the API call with the verified email
-    logging.info(f"API /user_info called by: {verified_email}")
     
     # Get the user info
     user = Users.query.filter_by(email=verified_email).first()
@@ -71,7 +72,7 @@ def user_info(verified_email):
     return jsonify({'error': 'User not found'}), 404
 
 # Add admin email
-@main.route('/add_admin', methods=['POST'])
+@main.route('/admin', methods=['POST'])
 @google_token_required
 def add_admin(verified_email):
     # Log the API call with the verified email
@@ -110,7 +111,7 @@ def add_admin(verified_email):
     return jsonify({'admin_email': new_admin.email}), 201
 
 # Remove admin email
-@main.route('/remove_admin', methods=['DELETE'])
+@main.route('/admin', methods=['DELETE'])
 @google_token_required
 def remove_admin(verified_email):
     # Log the API call with the verified email
@@ -191,7 +192,7 @@ def add_request_merchant(verified_email):
     return jsonify({'Success': 'Request Merchat added'}), 201
 
 # Add merchant
-@main.route('/add_merchant', methods=['POST'])
+@main.route('/merchant', methods=['POST'])
 @google_token_required
 def add_merchant(verified_email):
     # Log the API call with the verified email
