@@ -6,7 +6,6 @@
     },
     "google": {
         "clientid": "223452399978-323pardairq17ovgjd075bga67je0he1.apps.googleusercontent.com",
-        "geocoding": "AIzaSyDcjCQEx5tdLWxURFYAH0LvIC4OA-Cmbhg"
     },
     "validation": {
         "email_domain": "gmail.com"
