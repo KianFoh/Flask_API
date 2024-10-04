@@ -252,7 +252,7 @@ def add_merchant(verified_email):
         category = Categories(name=merchant_type)
         db.session.add(category)
         db.session.commit()
-        socketio_events.category_update(category)
+        socketio_events.add_category_update(category)
 
     # Create new merchant
     new_merchant = Merchants(
@@ -413,3 +413,31 @@ def get_merchant(verified_email):
     }
 
     return jsonify({'Merchant': data}), 200
+
+# Delete Merchant
+@main.route('/merchant', methods=['DELETE'])
+@google_token_required
+def delete_merchant(verified_email):
+    # Log the API call with the verified email
+    logging.info(f"API /merchant DELETE called by: {verified_email}")
+
+    merchant_id = request.args.get('id')
+
+    reponse = Valid.user_is_admin(verified_email)
+    if reponse:
+        return reponse
+
+    # Query merchant by ID
+    merchant = Merchants.query.filter_by(id=merchant_id).first()
+
+    # Check if merchant exists
+    if not merchant:
+        return jsonify({'error': 'Merchant not found'}), 404
+
+    # Delete merchant
+    db.session.delete(merchant)
+    db.session.commit()
+
+    socketio_events.delete_merchantUpdate(merchant_id)
+
+    return jsonify({'message': 'Merchant deleted successfully'}), 200

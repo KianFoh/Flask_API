@@ -33,9 +33,12 @@ def handle_disconnect():
 def admin_status_update(user):
     socketio.emit('admin_status_update', {'isadmin': user.isadmin}, room=user.email)    
 
-def category_update(category):
+def add_category_update(category):
     data = {'ID': category.id, 'Name': category.name}
     socketio.emit('category_added', {'Categories': data})
+
+def delete_category_update(category):
+    socketio.emit('category_deleted', {'Categories': category.id})
 
 # Function to emit merchant data via Socket.IO
 def add_merchantUpdate(merchant):
@@ -46,3 +49,6 @@ def add_merchantUpdate(merchant):
         'Image': merchant.images[0].image_url if merchant.images and len(merchant.images) > 0 else ""
     }
     socketio.emit('merchant_added', {'Merchants': data})
+
+def delete_merchantUpdate(merchantID):
+    socketio.emit('merchant_deleted', {'Merchants': merchantID})
