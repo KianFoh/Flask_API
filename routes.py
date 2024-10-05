@@ -1,4 +1,5 @@
 # routes.py
+import re
 from flask import request, jsonify, Blueprint
 from flask_migrate import Migrate
 import logging
@@ -76,7 +77,7 @@ def user_info(verified_email):
 @google_token_required
 def add_admin(verified_email):
     # Log the API call with the verified email
-    logging.info(f"API /add_admin called by: {verified_email}")
+    logging.info(f"API /admin POST called by: {verified_email}")
 
     email = request.data.decode('utf-8')
 
@@ -115,7 +116,7 @@ def add_admin(verified_email):
 @google_token_required
 def remove_admin(verified_email):
     # Log the API call with the verified email
-    logging.info(f"API /remove_admin called by: {verified_email}")
+    logging.info(f"API /admin DELETE called by: {verified_email}")
 
     email = request.args.get('email')
 
@@ -152,7 +153,7 @@ def remove_admin(verified_email):
 @google_token_required
 def add_request_merchant(verified_email):
     # Log the API call with the verified email
-    logging.info(f"API /add_request_merchant called by: {verified_email}")
+    logging.info(f"API /request_merchant POST called by: {verified_email}")
 
     data = request.get_json()
     name = data.get('name')
@@ -195,8 +196,9 @@ def add_request_merchant(verified_email):
 @main.route('/merchant', methods=['POST'])
 @google_token_required
 def add_merchant(verified_email):
+
     # Log the API call with the verified email
-    logging.info(f"API /add_merchant called by: {verified_email}")
+    logging.info(f"API /merchant POST called by: {verified_email}")
 
     # Validate if the user is an admin
     response = Valid.user_is_admin(verified_email)
@@ -292,10 +294,145 @@ def add_merchant(verified_email):
 
     return jsonify({'Success': 'Merchant added'}), 201
 
+# Delete Merchant
+@main.route('/merchant', methods=['DELETE'])
+@google_token_required
+def delete_merchant(verified_email):
+    # Log the API call with the verified email
+    logging.info(f"API /merchant DELETE called by: {verified_email}")
+
+    merchant_id = request.args.get('id')
+
+    reponse = Valid.user_is_admin(verified_email)
+    if reponse:
+        return reponse
+
+    # Query merchant by ID
+    merchant = Merchants.query.filter_by(id=merchant_id).first()
+
+    # Check if merchant exists
+    if not merchant:
+        return jsonify({'error': 'Merchant not found'}), 404
+
+    # Delete merchant
+    db.session.delete(merchant)
+    db.session.commit()
+
+    socketio_events.delete_merchantUpdate(merchant_id)
+
+    return jsonify({'message': 'Merchant deleted successfully'}), 200
+
+
+# Edit merchant
+@main.route('/merchant', methods=['PUT'])
+@google_token_required
+def edit_merchant(verified_email):
+    logging.info(f"API /merchant PUT called by: {verified_email}")
+
+    # Validate if the user is an admin
+    if Valid.user_is_admin(verified_email):
+        return jsonify({'error': 'Only administrators are authorized to edit merchant'}), 403
+
+    data = request.get_json()
+    id = data.get('ID')
+    image_urls = data.get('Images', [])
+    merchant_name = data.get('Name')
+    merchant_type = data.get('Category')
+    merchant_address = data.get('Addresses', [])
+    discount = data.get('Discount')
+    extra_info = data.get('More Info')
+    terms_conditions = data.get('Terms')
+
+    # Validate input fields
+    required_fields = [
+        (merchant_name, 'Name'),
+        (merchant_type, 'Category'),
+        (merchant_address[0] if merchant_address else None, 'Address'),
+        (discount, 'Discount'),
+        (terms_conditions, 'Terms')
+    ]
+    for field, name in required_fields:
+        response = Valid.missing_field(field, name)
+        if response:
+            return response
+
+    if Valid.merchant_id(id) or Valid.merchant_exists(merchant_name, id):
+        return response
+
+    merchant_name = merchant_name.capitalize()
+    merchant_type = merchant_type.capitalize()
+
+    merchant = Merchants.query.get(id)
+    if not merchant:
+        return jsonify({'error': 'Merchant not found'}), 404
+
+    old_category_id = merchant.category_id
+
+    # Find or create the category
+    category = Categories.query.filter_by(name=merchant_type).first()
+    if not category:
+        category = Categories(name=merchant_type)
+        db.session.add(category)
+        db.session.commit()
+        socketio_events.add_category_update(category)
+
+    # Update merchant details
+    merchant.name = merchant_name
+    merchant.category_id = category.id
+    merchant.discount = discount
+    merchant.more_info = extra_info
+    merchant.terms = terms_conditions
+
+    # Update addresses
+    existing_addresses = Addresses.query.filter_by(merchant_id=merchant.id).all()
+    for i, address in enumerate(merchant_address):
+        if not address or address.strip() == "":
+            continue
+        if i < len(existing_addresses):
+            existing_addresses[i].address = address
+        else:
+            new_address = Addresses(merchant_id=merchant.id, address=address)
+            db.session.add(new_address)
+
+    # Remove extra addresses if any
+    for i in range(len(merchant_address), len(existing_addresses)):
+        db.session.delete(existing_addresses[i])
+
+    # Update image URLs
+    existing_images = MerchantImages.query.filter_by(merchant_id=merchant.id).all()
+    for i, url in enumerate(image_urls):
+        if not url or url.strip() == "":
+            continue
+        if i < len(existing_images):
+            existing_images[i].image_url = url
+        else:
+            new_image = MerchantImages(merchant_id=merchant.id, image_url=url)
+            db.session.add(new_image)
+
+    # Remove extra images if any
+    for i in range(len(image_urls), len(existing_images)):
+        db.session.delete(existing_images[i])
+
+    db.session.commit()
+
+    # Check if the old category has no merchants related to it
+    if old_category_id != category.id:
+        old_category = Categories.query.get(old_category_id)
+        if old_category and not old_category.merchants:
+            db.session.delete(old_category)
+            db.session.commit()
+            socketio_events.delete_category_update(old_category)
+
+    socketio_events.edit_merchant_update(merchant)
+    return jsonify({'Success': 'Merchant Edited'}), 200
+
 # Export RequestsMerchants to Excel
 @main.route('/export_request_merchants', methods=['GET'])
 @google_token_required
 def export_request_merchants(verified_email):
+    # Log the API call with the verified email
+    logging.info(f"API /export_request_merchants GET called by: {verified_email}")
+
     # Query all requests merchants data
     requests_merchants = RequestsMerchants.query.all()
 
@@ -340,7 +477,7 @@ def export_request_merchants(verified_email):
 @google_token_required
 def get_categories(verified_email):
     # Log the API call with the verified email
-    logging.info(f"API /categories called by: {verified_email}")
+    logging.info(f"API /categories GET called by: {verified_email}")
 
     # Query all categories
     categories = Categories.query.all()
@@ -361,7 +498,7 @@ def get_categories(verified_email):
 @google_token_required
 def get_merchants(verified_email):
     # Log the API call with the verified email
-    logging.info(f"API /merchants called by: {verified_email}")
+    logging.info(f"API /merchants GET called by: {verified_email}")
 
     # Query all merchants
     merchants = Merchants.query.all()
@@ -384,7 +521,7 @@ def get_merchants(verified_email):
 @google_token_required
 def get_merchant(verified_email):
     # Log the API call with the verified email
-    logging.info(f"API /merchant called by: {verified_email}")
+    logging.info(f"API /merchant GET called by: {verified_email}")
 
     merchant_id = request.args.get('id')
 
@@ -414,30 +551,3 @@ def get_merchant(verified_email):
 
     return jsonify({'Merchant': data}), 200
 
-# Delete Merchant
-@main.route('/merchant', methods=['DELETE'])
-@google_token_required
-def delete_merchant(verified_email):
-    # Log the API call with the verified email
-    logging.info(f"API /merchant DELETE called by: {verified_email}")
-
-    merchant_id = request.args.get('id')
-
-    reponse = Valid.user_is_admin(verified_email)
-    if reponse:
-        return reponse
-
-    # Query merchant by ID
-    merchant = Merchants.query.filter_by(id=merchant_id).first()
-
-    # Check if merchant exists
-    if not merchant:
-        return jsonify({'error': 'Merchant not found'}), 404
-
-    # Delete merchant
-    db.session.delete(merchant)
-    db.session.commit()
-
-    socketio_events.delete_merchantUpdate(merchant_id)
-
-    return jsonify({'message': 'Merchant deleted successfully'}), 200

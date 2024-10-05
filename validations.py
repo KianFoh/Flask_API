@@ -89,13 +89,32 @@ class Valid:
             return jsonify({'error': 'Invalid phone number format', 'input_field': field}), 400
     
     @staticmethod
-    def merchant_exists(merchant_name):
+    def merchant_exists(merchant_name, merchant_id=None):
         # Query the database to check if the merchant exists
         merchant = Merchants.query.filter_by(name=merchant_name).first()
         
         if merchant:
-            # If the merchant exists, return a JSON response
-            return jsonify({'error': 'Merchant already exists', 'input_field': 'Name'}), 400
+            # If the merchant exists and the ID is provided
+            if merchant_id:
+                # Check if the existing merchant's ID matches the provided ID
+                if merchant.id == merchant_id:
+                    return None  # It's okay if the IDs match
+                else:
+                    return jsonify({'error': 'Merchant with that name already exists', 'input_field': 'Name'}), 400
+            else:
+                # If no ID is provided, return an error
+                return jsonify({'error': 'Merchant with that name already exists', 'input_field': 'Name'}), 400
         
         # If the merchant does not exist, return None
         return None
+    
+    @staticmethod
+    def merchant_id(merchant_id):
+        # Query the database to check if the merchant exists
+        merchant = Merchants.query.filter_by(id=merchant_id).first()
+        
+        if merchant:
+            return None  # Return None if the merchant is found
+        
+        # Return an error response if the merchant is not found
+        return jsonify({'error': 'Merchant not found'}), 404

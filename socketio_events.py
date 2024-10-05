@@ -52,3 +52,12 @@ def add_merchantUpdate(merchant):
 
 def delete_merchantUpdate(merchantID):
     socketio.emit('merchant_deleted', {'Merchants': merchantID})
+
+def edit_merchant_update(merchant):
+    data = {
+        'ID': merchant.id,
+        'Name': merchant.name,
+        'Category': merchant.category.name,
+        'Image': merchant.images[0].image_url if merchant.images and len(merchant.images) > 0 else ""
+    }
+    socketio.emit('merchant_edited', {'Merchants': data})
