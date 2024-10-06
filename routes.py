@@ -196,55 +196,37 @@ def add_request_merchant(verified_email):
 @main.route('/merchant', methods=['POST'])
 @google_token_required
 def add_merchant(verified_email):
-
-    # Log the API call with the verified email
     logging.info(f"API /merchant POST called by: {verified_email}")
 
     # Validate if the user is an admin
-    response = Valid.user_is_admin(verified_email)
-    if response:
+    if Valid.user_is_admin(verified_email):
         return jsonify({'error': 'Only administrators are authorized to add new merchants'}), 403
 
     data = request.get_json()
-    image_urls = data.get('imageURL')
-    merchant_name = data.get('name')
-    merchant_type = data.get('type')
-    merchant_address = data.get('address')
-    discount = data.get('discount')
-    extra_info = data.get('info')
-    terms_conditions = data.get('terms')
+    image_urls = data.get('Images', [])
+    merchant_name = data.get('Name')
+    merchant_type = data.get('Category')
+    merchant_address = data.get('Addresses', [])
+    discount = data.get('Discount')
+    extra_info = data.get('More Info')
+    terms_conditions = data.get('Terms')
 
-    # Validate if name is missing
-    response = Valid.missing_field(merchant_name, 'Name')
-    if response:
-        return response
-    
-    # Validate if name is existing
-    response = Valid.merchant_exists(merchant_name)
-    if response:
-        return response
-    
-    # Validate if type is missing
-    response = Valid.missing_field(merchant_type, 'Type')
-    if response:
-        return response
-    
-    # Validate if address is missing
-    response = Valid.missing_field(merchant_address[0], 'Address')
-    if response:
-        return response
-    
-    # Validate if discount is missing
-    response = Valid.missing_field(discount, 'Discount')
-    if response:
-        return response
-    
-    # Validate if terms_conditions is missing
-    response = Valid.missing_field(terms_conditions, 'Terms')
-    if response:
-        return response
+    # Validate input fields
+    required_fields = [
+        (merchant_name, 'Name'),
+        (merchant_type, 'Category'),
+        (merchant_address[0] if merchant_address else None, 'Address'),
+        (discount, 'Discount'),
+        (terms_conditions, 'Terms')
+    ]
+    for field, name in required_fields:
+        response = Valid.missing_field(field, name)
+        if response:
+            return response
 
-    # Capitalize the first letter of the type
+    if Valid.merchant_exists(merchant_name):
+        return jsonify({'error': 'Merchant with this name already exists'}), 400
+
     merchant_name = merchant_name.capitalize()
     merchant_type = merchant_type.capitalize()
 
@@ -290,7 +272,7 @@ def add_merchant(verified_email):
     db.session.commit()
 
     # Emit the new merchant data via Socket.IO
-    socketio_events.add_merchantUpdate(new_merchant)
+    socketio_events.add_merchant_update(new_merchant)
 
     return jsonify({'Success': 'Merchant added'}), 201
 
@@ -318,7 +300,7 @@ def delete_merchant(verified_email):
     db.session.delete(merchant)
     db.session.commit()
 
-    socketio_events.delete_merchantUpdate(merchant_id)
+    socketio_events.delete_merchant_update(merchant_id)
 
     return jsonify({'message': 'Merchant deleted successfully'}), 200
 
@@ -480,7 +462,7 @@ def get_categories(verified_email):
     logging.info(f"API /categories GET called by: {verified_email}")
 
     # Query all categories
-    categories = Categories.query.all()
+    categories = Categories.query.order_by(Categories.id.asc()).all()
 
     # Convert data to a list of dictionaries
     data = [
@@ -501,7 +483,7 @@ def get_merchants(verified_email):
     logging.info(f"API /merchants GET called by: {verified_email}")
 
     # Query all merchants
-    merchants = Merchants.query.all()
+    merchants = Merchants.query.order_by(Merchants.id.asc()).all()
 
     # Convert data to a list of dictionaries
     data = [

@@ -41,7 +41,7 @@ def delete_category_update(category):
     socketio.emit('category_deleted', {'Categories': category.id})
 
 # Function to emit merchant data via Socket.IO
-def add_merchantUpdate(merchant):
+def add_merchant_update(merchant):
     data = {
         'ID': merchant.id,
         'Name': merchant.name,
@@ -50,7 +50,7 @@ def add_merchantUpdate(merchant):
     }
     socketio.emit('merchant_added', {'Merchants': data})
 
-def delete_merchantUpdate(merchantID):
+def delete_merchant_update(merchantID):
     socketio.emit('merchant_deleted', {'Merchants': merchantID})
 
 def edit_merchant_update(merchant):
