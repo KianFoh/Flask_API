@@ -1,6 +1,8 @@
 from extensions import db
-from sqlalchemy import String, Text, ForeignKey, Enum
+from sqlalchemy import String, Text, ForeignKey, Enum, DateTime
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+from datetime import datetime
 
 # Define models (tables)
 class Users(db.Model):
@@ -45,6 +47,7 @@ class RequestsMerchants(db.Model):
     category = db.Column(Enum('F&B', 'LifeStyle', name='category_enum'), nullable=False)  # Category with limited values
     contact_no = db.Column(String, nullable=False)  # Contact number
     requester_email = db.Column(String, nullable=False)  # Email
+    timestamp = db.Column(DateTime, default=func.now(), nullable=False)  # Timestamp for when the request is made
 
     def __repr__(self):
         return f'<RequestMerchant {self.name}>'

@@ -149,7 +149,7 @@ def remove_admin(verified_email):
     return jsonify({'message': 'Admin email removed successfully'}), 200
 
 # Add admin email
-@main.route('/add_request_merchant', methods=['POST'])
+@main.route('/request_merchant', methods=['POST'])
 @google_token_required
 def add_request_merchant(verified_email):
     # Log the API call with the verified email
@@ -429,7 +429,8 @@ def export_request_merchants(verified_email):
             'Name': rm.name,
             'Category': rm.category,
             'Contact No': rm.contact_no,
-            'Requester Email': rm.requester_email
+            'Requester Email': rm.requester_email,
+            'Timestamp': rm.timestamp
         }
         for rm in requests_merchants
     ]
