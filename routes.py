@@ -94,7 +94,7 @@ def add_admin(verified_email):
     # Validate if the email already exists in the AdminEmails table
     admin_email = Valid.check_admin_email_exists(email)
     if admin_email:
-        return jsonify({'error': 'Email is already in the database'}), 400
+        return jsonify({'error': 'Email is already exists'}), 400
 
     # Validate email format and domain
     response = Valid.email_format_and_domain(email)
