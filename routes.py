@@ -92,9 +92,9 @@ def add_admin(verified_email):
         return response
 
     # Validate if the email already exists in the AdminEmails table
-    response = Valid.missing_field(email, 'Email')
-    if response:
-        return response
+    admin_email = Valid.check_admin_email_exists(email)
+    if admin_email:
+        return jsonify({'error': 'Email is already in the database'}), 400
 
     # Validate email format and domain
     response = Valid.email_format_and_domain(email)
@@ -149,7 +149,7 @@ def remove_admin(verified_email):
     return jsonify({'message': 'Admin email removed successfully'}), 200
 
 # Add admin email
-@main.route('/request_merchant', methods=['POST'])
+@main.route('/add_request_merchant', methods=['POST'])
 @google_token_required
 def add_request_merchant(verified_email):
     # Log the API call with the verified email
@@ -429,8 +429,7 @@ def export_request_merchants(verified_email):
             'Name': rm.name,
             'Category': rm.category,
             'Contact No': rm.contact_no,
-            'Requester Email': rm.requester_email,
-            'Timestamp': rm.timestamp
+            'Requester Email': rm.requester_email
         }
         for rm in requests_merchants
     ]
