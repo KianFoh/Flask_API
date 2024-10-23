@@ -213,6 +213,7 @@ def add_merchant(verified_email):
 
     # Validate input fields
     required_fields = [
+        (image_urls[0] if image_urls else None, 'Images'),
         (merchant_name, 'Name'),
         (merchant_type, 'Category'),
         (merchant_address[0] if merchant_address else None, 'Address'),
@@ -327,6 +328,7 @@ def edit_merchant(verified_email):
 
     # Validate input fields
     required_fields = [
+        (image_urls[0] if image_urls else None, 'Images'),
         (merchant_name, 'Name'),
         (merchant_type, 'Category'),
         (merchant_address[0] if merchant_address else None, 'Address'),
