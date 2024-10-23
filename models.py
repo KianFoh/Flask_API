@@ -74,7 +74,7 @@ class MerchantImages(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)  # PK
     merchant_id = db.Column(db.Integer, ForeignKey('merchants.id'), nullable=False)  # FK to Merchants
-    image_url = db.Column(String, nullable=True)  # Image URL, can be NULL
+    image_url = db.Column(String, nullable=False)  # Image URL, can be NULL
 
     def __repr__(self):
         return f'<MerchantImage {self.image_url}>'
