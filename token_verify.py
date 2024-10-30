@@ -2,16 +2,13 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from functools import wraps
 from flask import request, jsonify
-import json
 import logging
 import time
-from flask_socketio import disconnect, emit
+from flask_socketio import disconnect
+from utils import CONFIG
 
 # Load CLIENT_ID
-with open('config.json') as config_file:
-    config = json.load(config_file)
-    
-CLIENT_ID = config['google']['clientid']
+CLIENT_ID = CONFIG['google']['clientid']
 
 def verify_google_token(token, retries=3, delay=2):
     for attempt in range(retries):
