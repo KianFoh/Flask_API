@@ -1,24 +1,23 @@
-import json
 from flask import Flask
 from flask_migrate import Migrate
 from extensions import db
 from socketio_events import socketio
 from routes import main as main_blueprint
+from utils import CONFIG
 import event_listeners
 
 def create_app():
     app = Flask(__name__)
 
-    # Load database configuration from config.json
-    with open('./config.json') as config_file:
-        config = json.load(config_file)
-
-    username = config['postgresql']['username']
-    password = config['postgresql']['password']
-    db_name = config['postgresql']['dbname']
+    # Load database configuration from CONFIG
+    username = CONFIG['postgresql']['username']
+    password = CONFIG['postgresql']['password']
+    db_name = CONFIG['postgresql']['dbname']
+    db_hostname = CONFIG['postgresql']['hostname']
+    db_port = CONFIG['postgresql']['port']
 
     # PostgreSQL configuration
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{username}:{password}@localhost/{db_name}'
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{username}:{password}@{db_hostname}:{db_port}/{db_name}'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Set up the SQLAlchemy ORM
@@ -29,7 +28,6 @@ def create_app():
 
     # Initialize SocketIO with the Flask app
     socketio.init_app(app)
-
 
     app.register_blueprint(main_blueprint)
 

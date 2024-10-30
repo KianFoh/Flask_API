@@ -2,7 +2,6 @@
 from flask import jsonify
 from models import Users, AdminEmails, Merchants
 from extensions import db
-from utils import VALID_EMAIL_DOMAIN
 import phonenumbers
 
 class Valid:
@@ -27,21 +26,6 @@ class Valid:
             return jsonify({'error': 'User not found'}), 404
         if not user.isadmin:
             return jsonify({'error': 'Require admin access'}), 403
-        return None
-    
-    @staticmethod
-    def missing_email(email):
-        if not email:
-            return jsonify({'error': 'Email is required'}), 400
-        return None
-
-    @staticmethod
-    def email_format_and_domain(email):
-        if '@' not in email:
-            return jsonify({'error': 'Invalid email'}), 400
-        domain = email.split('@')[1]
-        if domain != VALID_EMAIL_DOMAIN:
-            return jsonify({'error': f'Invalid email domain. Only {VALID_EMAIL_DOMAIN} is accepted.'}), 400
         return None
 
     @staticmethod

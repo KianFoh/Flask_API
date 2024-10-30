@@ -27,11 +27,6 @@ def create_user(verified_email):
     username = data.get('name')
     email = data.get('email')
 
-    # Validate email format and domain
-    response = Valid.email_format_and_domain(email)
-    if response:
-        return response
-
     # Validate if the user already exists
     response = Valid.user_exists(email)
     if response:
@@ -95,11 +90,6 @@ def add_admin(verified_email):
     admin_email = Valid.check_admin_email_exists(email)
     if admin_email:
         return jsonify({'error': 'Email is already exists'}), 400
-
-    # Validate email format and domain
-    response = Valid.email_format_and_domain(email)
-    if response:
-        return response
 
     # Create a new admin email
     new_admin = Valid.create_new_admin_email(email)

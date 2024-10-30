@@ -5,6 +5,7 @@ eventlet.monkey_patch()
 from app_config import create_app
 from socketio_events import socketio
 import logging
+from utils import CONFIG
 
 # Create the app
 app = create_app()
@@ -13,6 +14,12 @@ app = create_app()
 with app.app_context():
     if __name__ == '__main__':
         # Set the logging level for Werkzeug to WARNING to suppress detailed HTTP request logs
-        # log = logging.getLogger('werkzeug')
-        # log.setLevel(logging.WARNING)
-        socketio.run(app, host='0.0.0.0', port=5000, debug=False)
+        log = logging.getLogger('werkzeug')
+        log.setLevel(logging.WARNING)
+        
+        # Get host and port from CONFIG
+        host = CONFIG['api']['hostname']
+        port = int(CONFIG['api']['port'])
+        
+        # Run the app with socketio
+        socketio.run(app, host=host, port=port, debug=False)
