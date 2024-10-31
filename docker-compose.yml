@@ -1,0 +1,27 @@
+services:
+  flaskapi:
+    container_name: ${DOCKER_FLASKAPI_SERVICE}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5000" 
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  db:
+    container_name: ${DOCKER_POSTGRES_SERVICE}
+    image: postgres:13
+    environment:
+      POSTGRES_DB: ${POSTGRES_DBNAME}
+      POSTGRES_USER: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

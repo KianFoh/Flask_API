@@ -18,6 +18,12 @@ def load_config():
             'hostname': os.getenv('POSTGRES_HOSTNAME'),
             'port': os.getenv('POSTGRES_PORT')
         },
+        'docker': {
+            'postgres_service': os.getenv('DOCKER_POSTGRES_SERVICE'),
+            'postgres_port': os.getenv('DOCKER_POSTGRES_PORT'),
+            'flaskapi_service': os.getenv('DOCKER_FLASKAPI_SERVICE'),
+            'flaskapi_port': os.getenv('DOCKER_FLASKAPI_PORT')
+        },
         'google': {
             'clientid': os.getenv('GOOGLE_CLIENTID')
         }

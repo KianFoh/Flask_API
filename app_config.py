@@ -13,8 +13,8 @@ def create_app():
     username = CONFIG['postgresql']['username']
     password = CONFIG['postgresql']['password']
     db_name = CONFIG['postgresql']['dbname']
-    db_hostname = CONFIG['postgresql']['hostname']
-    db_port = CONFIG['postgresql']['port']
+    db_hostname = CONFIG['docker']['postgres_service']
+    db_port = CONFIG['docker']['postgres_port']
 
     # PostgreSQL configuration
     app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{username}:{password}@{db_hostname}:{db_port}/{db_name}'
