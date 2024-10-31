@@ -13,7 +13,7 @@ function wait_for_db() {
 wait_for_db
 
 # Run the migration script
-python /app/migrate.py
+python3 /app/migrate.py
 
 # Start the Flask application
 exec "$@"

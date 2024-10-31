@@ -23,6 +23,8 @@ EXPOSE 5000
 ENV FLASK_APP=app.py
 ENV FLASK_RUN_HOST=0.0.0.0
 
+RUN chmod +x /app/entrypoint.sh
+
 # # Set the entrypoint script
 ENTRYPOINT ["/app/entrypoint.sh"] 
 
