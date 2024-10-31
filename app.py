@@ -19,7 +19,7 @@ with app.app_context():
         
         # Get host and port from CONFIG
         host = CONFIG['api']['hostname']
-        port = int(CONFIG['api']['port'])
+        port = int(CONFIG['docker']['flaskapi_port'])
         
         # Run the app with socketio
         socketio.run(app, host=host, port=port, debug=False)

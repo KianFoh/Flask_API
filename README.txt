@@ -1,3 +1,37 @@
+Docker
+
+* Run docker compose build image and run as containers
+docker-compose up --build -d
+
+* Check docker compose status
+docker-compose ps
+
+* Check docker compose status including offline
+docker-compose ps -a
+
+* Start docker compose containers
+docker-compose start
+
+* Stop docker compose containers
+docker-compose stop
+
+* Delete docker containers
+docker-compose down
+
+Extra notes:
+
+* List docker images
+docker images
+
+* Delete docker image
+docker rmi <image_id_or_name>
+
+* List docker volumes
+docker volume ls
+
+* Deleting Docker Volumes
+docker volume rm <volume_name>
+
 Setup
 
 * Step 1: Install database and setup
@@ -38,10 +72,7 @@ flask db init
 flask db migrate -m "Initial Migration"
 
 # Run this command to apply the scripts
-flask db upgrade
-
-
-
+    flask db upgrade
 
 Extra notes:
 
