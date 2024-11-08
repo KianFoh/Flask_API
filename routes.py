@@ -421,7 +421,8 @@ def export_request_merchants(verified_email):
             'Name': rm.name,
             'Category': rm.category,
             'Contact No': rm.contact_no,
-            'Requester Email': rm.requester_email
+            'Requester Email': rm.requester_email,
+            'Timestamp': rm.timestamp
         }
         for rm in requests_merchants
     ]
