@@ -6,7 +6,7 @@ from models import Users
 from token_verify import socketio_token_required
 
 # Initialize SocketIO
-socketio = SocketIO()
+socketio = SocketIO(transports=['websocket', 'polling'])
 
 
 
