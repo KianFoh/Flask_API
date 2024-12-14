@@ -12,7 +12,7 @@ socketio = SocketIO()
 
 # SocketIO event listeners
 @socketio.on('connect')
-def handle_connect():
+def handle_connect(auth):
     email = request.args.get('email')
     token = request.args.get('token')
     verified_email = socketio_token_required(token)
@@ -25,7 +25,7 @@ def handle_connect():
 
 
 @socketio.on('disconnect')
-def handle_disconnect():
+def handle_disconnect(sid):
     email = request.args.get('email')
     leave_room(email)
     print(f'Client disconnected: {email}')
