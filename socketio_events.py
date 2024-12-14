@@ -25,7 +25,7 @@ def handle_connect(auth):
 
 
 @socketio.on('disconnect')
-def handle_disconnect(sid):
+def handle_disconnect():
     email = request.args.get('email')
     leave_room(email)
     print(f'Client disconnected: {email}')
