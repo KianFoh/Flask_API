@@ -15,20 +15,37 @@ socketio = SocketIO(transports=['websocket', 'polling'])
 def handle_connect(auth):
     email = request.args.get('email')
     token = request.args.get('token')
+
+    # Verify token
     verified_email = socketio_token_required(token)
-    if verified_email == email:
-        join_room(verified_email)
-        print(f'Client connected: {verified_email}')
-    else:
-        print('Invalid token')
+    if not verified_email:
+        print(f"Token verification failed for email: {email}")
+        disconnect()
         return False
 
+    if verified_email != email:
+        print(f"Email mismatch: {verified_email} != {email}")
+        disconnect()
+        return False
+
+    try:
+        join_room(verified_email)
+        print(f"Client connected: {verified_email}")
+    except Exception as e:
+        print(f"Error joining room for {verified_email}: {e}")
+        disconnect()
 
 @socketio.on('disconnect')
 def handle_disconnect():
     email = request.args.get('email')
-    leave_room(email)
-    print(f'Client disconnected: {email}')
+    if email:
+        try:
+            leave_room(email)
+            print(f"Client disconnected: {email}")
+        except Exception as e:
+            print(f"Error leaving room for {email}: {e}")
+    else:
+        print("Disconnect request missing email")
 
 def admin_status_update(user):
     socketio.emit('admin_status_update', {'isadmin': user.isadmin}, room=user.email)    
