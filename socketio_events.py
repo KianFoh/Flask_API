@@ -4,11 +4,13 @@ from flask_socketio import SocketIO, join_room, leave_room, disconnect, emit
 from flask import request
 from models import Users
 from token_verify import socketio_token_required
+import logging
 
 # Initialize SocketIO
 socketio = SocketIO(transports=['websocket', 'polling'])
 
-
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 # SocketIO event listeners
 @socketio.on('connect')
@@ -18,21 +20,21 @@ def handle_connect(auth):
 
     # Verify token
     verified_email = socketio_token_required(token)
-    if not verified_email:
-        print(f"Token verification failed for email: {email}")
+    if verified_email == "expired":
+        logging.error(f"Token verification failed for email: {email}")
         disconnect()
         return False
 
     if verified_email != email:
-        print(f"Email mismatch: {verified_email} != {email}")
+        logging.error(f"Email mismatch: {verified_email} != {email}")
         disconnect()
         return False
 
     try:
         join_room(verified_email)
-        print(f"Client connected: {verified_email}")
+        logging.info(f"Client connected: {verified_email}")
     except Exception as e:
-        print(f"Error joining room for {verified_email}: {e}")
+        logging.error(f"Error joining room for {verified_email}: {e}")
         disconnect()
 
 @socketio.on('disconnect')
@@ -41,9 +43,9 @@ def handle_disconnect():
     if email:
         try:
             leave_room(email)
-            print(f"Client disconnected: {email}")
+            logging.info(f"Client disconnected: {email}")
         except Exception as e:
-            print(f"Error leaving room for {email}: {e}")
+            logging.error(f"Error leaving room for {email}: {e}")
     else:
         print("Disconnect request missing email")
 
