@@ -218,8 +218,8 @@ def add_merchant(verified_email):
     if Valid.merchant_exists(merchant_name):
         return jsonify({'error': 'Merchant with this name already exists'}), 400
 
-    merchant_name = merchant_name.capitalize()
-    merchant_type = merchant_type.capitalize()
+    merchant_name = merchant_name
+    merchant_type = merchant_type
 
     # Find or create the category
     category = Categories.query.filter_by(name=merchant_type).first()
@@ -333,9 +333,9 @@ def edit_merchant(verified_email):
     if Valid.merchant_id(id) or Valid.merchant_exists(merchant_name, id):
         return response
 
-    merchant_name = merchant_name.capitalize()
-    merchant_type = merchant_type.capitalize()
-
+    merchant_name = merchant_name
+    merchant_type = merchant_type
+    
     merchant = Merchants.query.get(id)
     if not merchant:
         return jsonify({'error': 'Merchant not found'}), 404
