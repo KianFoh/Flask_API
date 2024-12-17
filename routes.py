@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 # Register the after_request handler
 @main.after_request
 def log_response(response):
-    logging.info(f"Response status: {response.status} for request: {request.path} by email: {email}")
+    logging.info(f"Response status: {response.status} for request: {request.path}")
     return response
 
 # Create a new user
