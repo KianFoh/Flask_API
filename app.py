@@ -12,14 +12,11 @@ app = create_app()
 
 # Ensure that the app context is used where needed
 with app.app_context():
-    if __name__ == '__main__':
-        # Set the logging level for Werkzeug to WARNING to suppress detailed HTTP request logs
-        log = logging.getLogger('werkzeug')
-        log.setLevel(logging.WARNING)
-        
-        # Get host and port from CONFIG
-        host = CONFIG['api']['hostname']
-        port = int(CONFIG['api']['port'])
-        
-        # Run the app with socketio
-        socketio.run(app, host=host, port=port, debug=False)
+    # Set the logging level for Werkzeug to WARNING to suppress detailed HTTP request logs
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.WARNING)
+
+    # Configure logging for your application
+    logging.basicConfig(level=logging.INFO)
+
+# Gunicorn will manage starting the app with Eventlet workers

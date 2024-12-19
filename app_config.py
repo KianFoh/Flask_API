@@ -5,6 +5,7 @@ from socketio_events import socketio
 from routes import main as main_blueprint
 from utils import CONFIG
 import event_listeners
+import logging
 
 def create_app():
     app = Flask(__name__)
@@ -32,4 +33,10 @@ def create_app():
 
     app.register_blueprint(main_blueprint)
 
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,  # Set the logging level
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
     return app

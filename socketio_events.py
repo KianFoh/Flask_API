@@ -9,9 +9,6 @@ import logging
 # Initialize SocketIO
 socketio = SocketIO(transports=['websocket', 'polling'])
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-
 # SocketIO event listeners
 @socketio.on('connect')
 def handle_connect(auth):
