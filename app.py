@@ -1,7 +1,3 @@
-# Apply eventlet monkey patching first
-import eventlet
-eventlet.monkey_patch()
-
 from app_config import create_app
 from socketio_events import socketio
 import logging
