@@ -10,45 +10,48 @@ import logging
 socketio = SocketIO(transports=['websocket', 'polling'])
 
 # SocketIO event listeners
+connected_clients = {}
+
 @socketio.on('connect')
 def handle_connect(auth):
+    sid = request.sid
     email = request.args.get('email')
     token = request.args.get('token')
 
-    # Verify token
+    # Token verification
     verified_email = socketio_token_required(token)
-    if verified_email == "expired":
-        logging.error(f"Token verification failed for email: {email}")
-        disconnect()
+    if verified_email == "expired" or verified_email != email:
+        emit('error', {'message': 'Invalid token or email mismatch'}, to=sid)
+        disconnect(sid)
         return False
 
-    if verified_email != email:
-        logging.error(f"Email mismatch: {verified_email} != {email}")
-        disconnect()
-        return False
-
+    # Store client info and join room
+    connected_clients[sid] = email
     try:
-        join_room(verified_email)
-        logging.info(f"Client connected: {verified_email}")
+        join_room(verified_email, sid=sid)
+        logging.info(f"Client connected: {verified_email} (sid: {sid})")
     except Exception as e:
-        logging.error(f"Error joining room for {verified_email}: {e}")
-        disconnect()
+        logging.error(f"Error joining room for {verified_email} (sid: {sid}): {e}")
+        disconnect(sid)
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    email = request.args.get('email')
+    sid = request.sid
+    email = connected_clients.pop(sid, None)
     if email:
         try:
-            leave_room(email)
-            logging.info(f"Client disconnected: {email}")
+            leave_room(email, sid=sid)
+            logging.info(f"Client disconnected: {email} (sid: {sid})")
         except Exception as e:
-            logging.error(f"Error leaving room for {email}: {e}")
+            logging.error(f"Error leaving room for {email} (sid: {sid}): {e}")
     else:
-        print("Disconnect request missing email")
+        logging.warning(f"Disconnected client with unknown email (sid: {sid})")
 
+# Emit admin status updates
 def admin_status_update(user):
-    socketio.emit('admin_status_update', {'isadmin': user.isadmin}, room=user.email)    
+    socketio.emit('admin_status_update', {'isadmin': user.isadmin}, room=user.email)
 
+# Emit category updates
 def add_category_update(category):
     data = {'ID': category.id, 'Name': category.name}
     socketio.emit('category_added', {'Categories': data})
@@ -56,7 +59,7 @@ def add_category_update(category):
 def delete_category_update(category):
     socketio.emit('category_deleted', {'Categories': category.id})
 
-# Function to emit merchant data via Socket.IO
+# Emit merchant updates
 def add_merchant_update(merchant):
     data = {
         'ID': merchant.id,
