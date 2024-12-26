@@ -21,7 +21,7 @@ def verify_google_token(token, retries=3, delay=2):
     for attempt in range(retries):
         try:
             # Verify the token using the cached session
-            id_info = id_token.verify_oauth2_token(token, cached_request, CLIENT_ID)
+            id_info = id_token.verify_oauth2_token(token, grequest, CLIENT_ID)
 
             # Return the email if the token is valid
             logging.info("Token is valid.")
