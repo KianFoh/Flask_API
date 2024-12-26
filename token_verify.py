@@ -1,5 +1,5 @@
 from google.oauth2 import id_token
-from google.auth.transport import requests
+from google.auth.transport import requests as googlerequests
 from functools import wraps
 from flask import request, jsonify
 import logging
@@ -13,15 +13,15 @@ import requests as req
 CLIENT_ID = CONFIG['google']['clientid']
 
 # Create a cached session
-session = req.session()
-cached_session = cachecontrol.CacheControl(session)
-request = requests.Request(session=cached_session)
+gsession  = req.session()
+gcached_session  = cachecontrol.CacheControl(gsession)
+grequest  = googlerequests.Request(session=gcached_session)
 
 def verify_google_token(token, retries=3, delay=2):
     for attempt in range(retries):
         try:
             # Verify the token
-            id_info = id_token.verify_oauth2_token(token, request, CLIENT_ID)
+            id_info = id_token.verify_oauth2_token(token, grequest, CLIENT_ID)
 
             # Return the email if the token is valid
             logging.info("Token is valid.")
