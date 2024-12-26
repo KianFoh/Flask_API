@@ -6,15 +6,22 @@ import logging
 import time
 from flask_socketio import disconnect
 from utils import CONFIG
+import cachecontrol
+import requests as req
 
 # Load CLIENT_ID
 CLIENT_ID = CONFIG['google']['clientid']
+
+# Create a cached session
+session = req.session()
+cached_session = cachecontrol.CacheControl(session)
+request = requests.Request(session=cached_session)
 
 def verify_google_token(token, retries=3, delay=2):
     for attempt in range(retries):
         try:
             # Verify the token
-            id_info = id_token.verify_oauth2_token(token, requests.Request(), CLIENT_ID)
+            id_info = id_token.verify_oauth2_token(token, request, CLIENT_ID)
 
             # Return the email if the token is valid
             logging.info("Token is valid.")
