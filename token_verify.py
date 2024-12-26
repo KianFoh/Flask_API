@@ -20,8 +20,8 @@ grequest  = googlerequests.Request(session=gcached_session)
 def verify_google_token(token, retries=3, delay=2):
     for attempt in range(retries):
         try:
-            # Verify the token
-            id_info = id_token.verify_oauth2_token(token, grequest, CLIENT_ID)
+            # Verify the token using the cached session
+            id_info = id_token.verify_oauth2_token(token, cached_request, CLIENT_ID)
 
             # Return the email if the token is valid
             logging.info("Token is valid.")
@@ -47,26 +47,34 @@ def verify_google_token(token, retries=3, delay=2):
             # log the error if the token verification fails after multiple attempts
             else:
                 logging.error("Token verification failed after multiple attempts.")
-                return str(e)
+                return "invalid"
+        except Exception as e:
+            # Log any other exceptions and return "invalid"
+            logging.error(f"Unexpected error during token verification: {e}")
+            return "invalid"
             
 def google_token_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        auth_header = request.headers.get('Authorization')
+        try:
+            auth_header = request.headers.get('Authorization')
 
-        if auth_header is None or not auth_header.startswith('Bearer '):
-            return jsonify({'error': 'Token is missing or invalid'}), 401
+            if auth_header is None or not auth_header.startswith('Bearer '):
+                return jsonify({'error': 'Token is missing or invalid'}), 401
 
-        token = auth_header.split(' ')[1]
+            token = auth_header.split(' ')[1]
 
-        verified_email = verify_google_token(token)
-        if verified_email == "expired":
-            return jsonify({'error': 'Token is expired'}), 401
-        elif verified_email == "invalid":
-            return jsonify({'error': 'Invalid token'}), 401
+            verified_email = verify_google_token(token)
+            if verified_email == "expired":
+                return jsonify({'error': 'Token is expired'}), 401
+            elif verified_email == "invalid":
+                return jsonify({'error': 'Invalid token'}), 401
 
-        # Pass the verified email to the route function
-        return f(verified_email, *args, **kwargs)
+            # Pass the verified email to the route function
+            return f(verified_email, *args, **kwargs)
+        except Exception as e:
+            logging.error(f"Unexpected error in token verification: {e}")
+            return jsonify({'error': 'Internal server error'}), 500
     return decorated_function
 
 def socketio_token_required(token):
